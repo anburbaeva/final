@@ -1,41 +1,51 @@
-name: CI/CD Workflow
+name: CI/CD
 
 on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  test_and_build:
+  test:
+    name: Build and Test
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-        with:
-          ref: main
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v2
         with:
-          go-version: '1.17'
+          go-version: 1.17  
+
+      - name: Install dependencies
+        run: |
+          go mod download
 
       - name: Run tests
         run: go test ./...
 
-      - name: Build Docker image
-        run: docker build -t ralphiko/dockerfile .
-
-  publish_to_dockerhub:
+  publish:
+    name: Publish to DockerHub
     runs-on: ubuntu-latest
-    needs: test_and_build
-    if: github.ref == 'refs/tags/*'
+    if: startsWith(github.ref, 'refs/tags/')
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-        with:
-          ref: main
 
-      - name: Push Docker image
-        run: docker push ralphiko/dockerfile
+      - name: Log into DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t dockerfile:latest .
+          docker tag dockerfile:latest ralphiko/dockerfile:latest
+          docker push ralphiko/dockerfile:latest
