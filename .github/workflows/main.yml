@@ -19,8 +19,8 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build . -t your_image_name:latest
-          docker run your_image_name:latest python manage.py test  # Assuming this is how you run tests
+          docker build . -t tracker.db:latest
+          docker run tracker.db:latest python manage.py test  # Assuming this is how you run tests
 
   publish_to_dockerhub:
     name: Publish to DockerHub
@@ -42,5 +42,5 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build . -t your_image_name:${{ github.ref }}
-          docker push your_image_name:${{ github.ref }}
+          docker build . -t tracker.db:${{ github.ref }}
+          docker push tracker.db:${{ github.ref }}
